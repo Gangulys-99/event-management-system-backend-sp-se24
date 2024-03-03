@@ -24,7 +24,7 @@ app.use(express.json())
 //define routes
 app.use('/', require('./routes/pages'));
 app.use('/auth', require('./routes/auth'));
-
+app.use('/venue-list', require('./routes/pages'));
 
 app.listen(5000, ()=>{
     console.log("server started");

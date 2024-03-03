@@ -1,6 +1,6 @@
 const express = require("express");
 const authController = require("../controllers/auth");
-
+const venueController = require("../controllers/venues");
 const router = express.Router();
 
 router.get('/',authController.isLoggedIn, (req, res) => {
@@ -24,5 +24,8 @@ router.get('/profile', authController.isLoggedIn, (req, res) => {
     }
 })
 
+router.get('/venue-list', (req, res) => {
+    venueController.getVenueList(req, res);
+})
 module.exports = router;
 
