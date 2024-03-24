@@ -1,17 +1,27 @@
 name: Docker Image CI for GHCR
- 
+
 on:
-    push
- 
+  push:
+    branches:
+      - main
+
 jobs:
-    build_and_publish:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v3
-            - name: npm install
-             
-            - name: Build and push the image
-              run: |
-                docker login --username gangulys99 --password ${{secrets.ACCESS_TOKEN}} ghcr.io
-                docker build -t ghcr.io/gangulys99/project-be-service:latest --file Dockerfile .  
-                docker push ghcr.io/gangulys99/project-be-service:latest 
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build and push Docker image
+        run: |
+          docker login --username gangulys99 --password ${{ secrets.ACCESS_TOKEN }} ghcr.io
+          docker build -t ghcr.io/gangulys99/project-be-service:latest --file Dockerfile .
+          docker push ghcr.io/gangulys99/project-be-service:latest
