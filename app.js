@@ -1,7 +1,7 @@
 //main things of proj
 const express = require("express");
 const cors = require('cors'); 
-const db = require('./db')
+// const db = require('./db')
 const cookieParser = require("cookie-parser");
 
 
@@ -19,13 +19,13 @@ mongoose.connect(process.env.MONGO_URI)
     console.log(error)
 })
 
-db.connect((err) => {
-    if (err) {
-      console.error('Error connecting to MySQL:', err);
-      throw err;
-    }
-    console.log('Connected to MySQL database');
-});
+// db.connect((err) => {
+//     if (err) {
+//       console.error('Error connecting to MySQL:', err);
+//       throw err;
+//     }
+//     console.log('Connected to MySQL database');
+// });
 
 // change this according to the request you make for form parsing use: 
 app.use(express.urlencoded({ extended: false }));
