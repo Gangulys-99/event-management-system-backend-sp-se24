@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require('cors'); 
 // const db = require('./db')
 const cookieParser = require("cookie-parser");
-
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -35,9 +35,11 @@ app.use(express.json())
 app.use('/', require('./routes/pages'));
 app.use('/auth', require('./routes/auth'));
 app.use('/venue-list', require('./routes/pages'));
+app.use('/inviteFriend', require('./routes/pages'));
 
 app.listen(5000, ()=>{
     console.log("server started");
 });
+
 
 
