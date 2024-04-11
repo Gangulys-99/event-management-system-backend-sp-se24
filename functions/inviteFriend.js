@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 async function inviteFriend(name, friendEmail){
     try{
         console.log("invite friend");
-        const websiteUrl = 'https://www.google.com/'
+        const websiteUrl = 'https://event-management-system-ed1n.onrender.com'
         const mailOptions = {
             from: process.env.ENV_MAIL_USER, 
             to: friendEmail, 
