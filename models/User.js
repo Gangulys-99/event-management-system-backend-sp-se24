@@ -8,7 +8,22 @@ const userSchema = new mongoose.Schema({
     password: String,
     role: String,
     status: { type: Number, default: 0 }, // Assuming 'status' is equivalent to 'status' field in MySQL
-    verified: Boolean
+    verified: Boolean,
+    sport: {
+        type: String
+    },
+    gender: {
+        type: String
+    },
+    age: {
+        type: Number
+    },
+    level: {
+        type: String
+    },
+    available: {
+        type: Boolean
+    }
 });
 
 module.exports = mongoose.model('User', userSchema);
