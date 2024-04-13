@@ -36,6 +36,10 @@ app.use('/', require('./routes/pages'));
 app.use('/auth', require('./routes/auth'));
 app.use('/venue-list', require('./routes/pages'));
 app.use('/inviteFriend', require('./routes/pages'));
+app.use('/profile', require('./routes/pages'));
+app.use('/venue', require('./routes/pages'));
+app.use('/player', require('./routes/pages'));
+
 
 app.listen(5000, ()=>{
     console.log("server started");
