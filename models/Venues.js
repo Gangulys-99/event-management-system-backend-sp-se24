@@ -29,7 +29,16 @@ const venueSchema = new mongoose.Schema({
     closed: {
         type: Boolean,
         default: false // Default value is false
-    }
+    },
+    bookings: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        date: Date,
+        startTime: String,
+        endTime: String
+    }]
 });
 
 module.exports = mongoose.model('Venue', venueSchema);

@@ -161,6 +161,38 @@ router.put('/venue/:id',authController.isLoggedIn, async (req, res) => {
     }
 });
 
+// Add activity
+const createActivity = require('../functions/createActivity.js');
+
+router.post('/add-activity', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { userId, activity_name, venue_id, total_capacity, address, date, start_time, end_time } = req.body;
+        console.log(req.user);
+        // console.log(req.user.role)
+      
+        
+        await createActivity(userId, activity_name, venue_id, total_capacity, address, date, start_time,end_time);
+        res.status(200).json({ message: 'Successfully added activity' });
+    } catch (error) {
+        console.log(error)
+        res.status(400).json({error});
+    }
+
+});
+
+// Register for activity 
+router.post('/register-for-activity/:activityId', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { activityId } = req.params;
+        const userId = req.user._id;
+        await registerForActivity(activityId, userId);
+        res.status(200).json({ message: 'Successfully registered for activity' });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
 
 // Players Data
 
@@ -178,5 +210,63 @@ router.get('/player-list', async (req, res) => {
     }
 });
 
+// Book Venue
+router.post('/book-venue', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { venueId, bookDate, startTime, endTime } = req.body;
+        const userId = req.user._id;
+
+        // Find the venue by ID
+        const venue = await Venue.findById(venueId);
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        // Check if the venue is closed
+        if (venue.closed) {
+            return res.status(400).json({ message: 'Venue is closed' });
+        }
+
+        // Check if the venue is already booked for the given time slot
+        const isBooked = venue.bookings.some(booking =>
+            booking.date.toDateString() === new Date(bookDate).toDateString() &&
+            booking.startTime === startTime &&
+            booking.endTime === endTime
+        );
+
+        if (isBooked) {
+            return res.status(400).json({ message: 'Venue is already booked for the selected time slot' });
+        }
+
+        // Check if the venue is fully booked for the given date and time
+        const totalBookings = venue.bookings.filter(booking =>
+            booking.date.toDateString() === new Date(bookDate).toDateString() &&
+            booking.startTime === startTime &&
+            booking.endTime === endTime
+        ).length;
+
+        if (totalBookings >= venue.total_capacity) {
+            return res.status(400).json({ message: 'Venue is fully booked for the selected time slot' });
+        }
+
+        // Add the booking to the venue
+        venue.bookings.push({
+            userId,
+            date: bookDate,
+            startTime,
+            endTime
+        });
+
+        // Save the updated venue
+        await venue.save();
+
+        // Send confirmation email to the user and venue owner (you need to implement this)
+
+        res.status(200).json({ message: 'Venue booked successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 module.exports = router;
 
