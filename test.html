@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test reCAPTCHA v3</title>
+    <script src="https://www.google.com/recaptcha/api.js?render=6Le0qbopAAAAAIitmLtS_4spQuLHxD4VqG6fyNbR"></script>
+    <script>
+        grecaptcha.ready(function() {
+            grecaptcha.execute('6Le0qbopAAAAAIitmLtS_4spQuLHxD4VqG6fyNbR', {action: 'homepage'}).then(function(token) {
+                // Log the token to the browser console
+                console.log('reCAPTCHA token:', token);
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>reCAPTCHA v3 Test Page</h1>
+    <p>Check the console for the reCAPTCHA token.</p>
+</body>
+</html>

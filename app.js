@@ -2,7 +2,7 @@
 const express = require("express");
 const cors = require('cors'); 
 // const db = require('./db')
-const cookieParser = require("cookie-parser");
+const cookieParser = require("cookie-parser")
 require('dotenv').config();
 
 const app = express();
@@ -39,6 +39,8 @@ app.use('/inviteFriend', require('./routes/pages'));
 app.use('/profile', require('./routes/pages'));
 app.use('/venue', require('./routes/pages'));
 app.use('/player', require('./routes/pages'));
+
+
 
 
 app.listen(5000, ()=>{

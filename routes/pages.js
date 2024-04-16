@@ -2,6 +2,7 @@ const express = require("express");
 const authController = require("../controllers/auth");
 const venueController = require("../controllers/venues");
 const router = express.Router();
+const axios = require('axios');
 
 router.get('/', authController.isLoggedIn, (req, res) => {
     res.send("homepage")
@@ -15,14 +16,51 @@ router.get('/login', (req, res) => {
     res.send("login")
 });
 
-// router.get('/profile', authController.isLoggedIn, (req, res) => {
-//     if (req.user) {
-//         res.send("profile")
 
-//     } else {
-//         res.send("login")
-//     }
-// })
+router.post('/requestPasswordReset', async (req, res) => {
+    // Logic to handle:
+    // - Verify if the email exists in your database.
+    // - Create a unique password reset token.
+    // - Store the token in your database with an expiration.
+    // - Send an email to the user with the reset token/link.
+    res.send("Reset password email sent.");
+});
+
+
+router.post('/resetPassword', async (req, res) => {
+    // Logic to handle:
+    // - Validate the password reset token.
+    // - Check if the token is expired.
+    // - Validate the new password.
+    // - Hash the new password and update the user's password in the database.
+    // - Invalidate the used token.
+    res.send("Password has been successfully reset.");
+});
+
+
+router.post('/verify_captcha', async (req, res) => {
+    const userCaptchaResponse = req.body.captchaResponse;
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    try {
+        const response = await axios.post(`https://www.google.com/recaptcha/api/siteverify`, {}, {
+          params: {
+            secret: secretKey,
+            response: userCaptchaResponse
+          }
+        });
+
+        const verificationResult = response.data;
+
+        if (verificationResult.success) {
+          res.send({ success: true, message: 'CAPTCHA verified successfully!' });
+        } else {
+          res.send({ success: false, message: 'Failed to verify CAPTCHA.' });
+        }
+    } catch (error) {
+        res.status(500).send({ success: false, message: 'Error in verifying CAPTCHA.', error: error.message  });
+    }
+});
 
 const Venue = require('../models/Venues');
 
