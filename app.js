@@ -42,7 +42,8 @@ app.use('/player', require('./routes/pages'));
 app.use('/add-activity', require('./routes/pages'));
 app.use('/register-for-activity', require('./routes/pages'));
 app.use('/book-venue', require('./routes/pages'));
-
+app.post('/request-password-reset', require('./routes/auth'));
+app.post('/reset-password',require('./routes/auth'));
 app.listen(5000, ()=>{
     console.log("server started");
 });
