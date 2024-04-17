@@ -210,3 +210,84 @@ exports.logout = (req, res) => {
     res.clearCookie('userSave');
     res.status(200).redirect("/");
 };
+
+// password reset
+const PasswordResetToken = require('../models/PasswordResetToken');
+exports.requestPasswordReset = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Check if the user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Generate password reset token
+        const token = jwt.sign({ userId: user._id }, process.env.RESET_PASSWORD_SECRET, { expiresIn: '1h' });
+        const resetToken = new PasswordResetToken({ userId: user._id, token });
+        await resetToken.save();
+
+        // Send password reset link via email
+        await sendPasswordResetEmail(user.email, token);
+
+        return res.status(200).json({ message: 'Password reset link sent to your email' });
+    } catch (error) {
+        console.error('Error requesting password reset:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+const sendPasswordResetEmail = async (email, token) => {
+    try {
+        const resetLink = `http://localhost:5000/reset-password?token=${token}`;
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.ENV_MAIL_USER,
+                pass: process.env.ENV_MAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.ENV_MAIL_USER,
+            to: email,
+            subject: 'Password Reset',
+            html: `Click <a href="${resetLink}">here</a> to reset your password.`
+        };
+
+        await transporter.sendMail(mailOptions);
+    } catch (error) {
+        throw new Error('Error sending password reset email');
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Find the reset token in the database
+        const resetToken = await PasswordResetToken.findOne({ token });
+        if (!resetToken) {
+            return res.status(400).json({ message: 'Invalid or expired token' });
+        }
+
+        // Verify the token
+        const decodedToken = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user's password
+        await User.updateOne({ _id: decodedToken.userId }, { password: hashedPassword });
+
+        // Delete the reset token
+        await PasswordResetToken.deleteOne({ token });
+
+        return res.status(200).json({ message: 'Password reset successful' });
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
