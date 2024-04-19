@@ -38,6 +38,27 @@ const venueSchema = new mongoose.Schema({
         date: Date,
         startTime: String,
         endTime: String
+    }],
+    reviews: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        },
+        rating: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5
+        },
+        review: String
+    }],
+    bookmarks: [{
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true
+        }
     }]
 });
 

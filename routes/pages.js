@@ -71,7 +71,7 @@ router.get('/profile', authController.isLoggedIn, async (req, res) => {
     }
 });
 
-router.put('/profile', authController.isLoggedIn,  async (req, res) => {
+router.put('/profile', authController.isLoggedIn, async (req, res) => {
     try {
         const updatedUser = req.body;
         if (!updatedUser || !updatedUser.username || !updatedUser.email || !updatedUser.role) {
@@ -89,7 +89,7 @@ router.put('/profile', authController.isLoggedIn,  async (req, res) => {
                     }
                 });
 
-            const updatedUserData = await findUserByEmail(email); 
+            const updatedUserData = await findUserByEmail(email);
             return res.status(200).json(updatedUserData);
         }
         // write code to update profile
@@ -117,19 +117,19 @@ router.post('/venue', authController.isLoggedIn, async (req, res) => {
         if (!req.user || req.user.role !== 'owner') {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-        
+
         await createVenue(userId, v_name, address, sport, total_capacity, total_cost, closed);
         res.status(200).json({ message: 'Successfully added venue' });
     } catch (error) {
         console.log(error)
-        res.status(400).json({error});
+        res.status(400).json({ error });
     }
 
 });
 
 // open or close
 
-router.put('/venue/:id',authController.isLoggedIn, async (req, res) => {
+router.put('/venue/:id', authController.isLoggedIn, async (req, res) => {
     try {
         const venueId = req.params.id;
         const { open } = req.body;
@@ -169,13 +169,13 @@ router.post('/add-activity', authController.isLoggedIn, async (req, res) => {
         const { userId, activity_name, venue_id, total_capacity, address, date, start_time, end_time } = req.body;
         console.log(req.user);
         // console.log(req.user.role)
-      
-        
-        await createActivity(userId, activity_name, venue_id, total_capacity, address, date, start_time,end_time);
+
+
+        await createActivity(userId, activity_name, venue_id, total_capacity, address, date, start_time, end_time);
         res.status(200).json({ message: 'Successfully added activity' });
     } catch (error) {
         console.log(error)
-        res.status(400).json({error});
+        res.status(400).json({ error });
     }
 
 });
@@ -260,9 +260,151 @@ router.post('/book-venue', authController.isLoggedIn, async (req, res) => {
         // Save the updated venue
         await venue.save();
 
-        // Send confirmation email to the user and venue owner (you need to implement this)
+        const user = await User.findById(userId);
+        const userEmail = user.email;
+        console.log(userEmail)
+        const owner = await User.findById(venue.userId);
+        if (!owner) {
+            throw new Error('Venue owner not found');
+        }
+
+        const ownerEmail = owner.email;
+
+        // Send confirmation email
+        await sendConfirmationEmail(userEmail, ownerEmail, venue.v_name, bookDate, startTime, endTime);
 
         res.status(200).json({ message: 'Venue booked successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+const nodemailer = require('nodemailer');
+
+async function sendConfirmationEmail(userEmail, venueOwnerEmail, venueName, bookDate, startTime, endTime) {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.ENV_MAIL_USER,
+                pass: process.env.ENV_MAIL_PASS
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.ENV_MAIL_USER,
+            to: userEmail,
+            cc: venueOwnerEmail, // Send a copy to the venue owner
+            subject: 'Venue Booking Confirmation',
+            html: `
+                <p>Dear User,</p>
+                <p>Your booking at ${venueName} has been confirmed:</p>
+                <p>Date: ${bookDate}</p>
+                <p>Time: ${startTime} to ${endTime}</p>
+                <p>Thank you for choosing ${venueName}.</p>
+                <p>Best regards,</p>
+                <p>Eventmate</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Confirmation email sent successfully');
+    } catch (error) {
+        console.error('Error sending confirmation email:', error);
+        throw new Error('Failed to send confirmation email');
+    }
+}
+
+// venue review
+router.post('/venue-review', authController.isLoggedIn, async (req, res) => {
+    try {
+        const { venueId, rating, review } = req.body;
+        const userId = req.user._id;
+        const bookedVenue = await User.findById(userId).populate('bookings');
+
+        const hasBooking = bookedVenue.bookings.some(booking => booking.venueId.toString() === req.params.venueId);
+
+        if (!hasBooking) {
+            return res.status(400).json({ message: 'Booking not found for this venue' });
+        }
+        const newReview = {
+            userId: req.user._id,
+            rating: req.body.rating,
+            review: req.body.review || '', // handle optional review field
+        };
+
+        const venue = await Venue.findByIdAndUpdate(
+            req.params.venueId,
+            { $push: { reviews: newReview } },
+            { new: true } // return the updated document
+        );
+
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        res.status(200).json({ message: 'Review submitted successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// get details of a particular venue
+
+router.get('/venue-details', async (req, res) => {
+    try {
+        const venueId = req.body.venueId;
+        console.log(venueId);
+        const venue = await Venue.findById(venueId);
+        console.log(venue);
+        res.status(200).json(venue);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+// get all reservations at a venue
+router.get('/reservation-details', async (req, res) => {
+    try {
+        const venueId = req.body.venueId;
+
+        // Find the venue by ID
+        const venue = await Venue.findById(venueId).populate({
+            path: 'bookings.userId',
+            select: 'username' // Select the username field to be populated
+        });
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        
+        // Return the bookings/reservations for the venue
+        res.status(200).json({ bookings: venue.bookings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+// reservations by user
+router.get('/user-reservation-details', async (req, res) => {
+    try {
+        const userId = req.body.userId;
+
+        // Find the user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Find all the reservations made by the user
+        const reservations = await Venue.find({ 'bookings.userId': userId })
+            .select('v_name address sport bookings');
+
+        // Return the reservations made by the user
+        res.status(200).json({ reservations });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
