@@ -38,38 +38,6 @@ exports.register = async (req, res) => {
 };
 // without otp
 
-// exports.login = async (req, res) => {
-//     try {
-//         const { email, password } = req.body;
- 
-//         // Find user by email
-//         const user = await User.findOne({ email });
- 
-//         if (!user || !await bcrypt.compare(password, user.password)) {
-//             return res.status(400).send("Invalid email or password");
-//         }
- 
-//         // Generate JWT token
-//         const token = jwt.sign({ id: user._id }, process.env.ENV_JWT_SECRET, {
-//             expiresIn: process.env.ENV_JWT_EXPIRES_IN
-//         });
- 
-//         console.log("the token is " + token);
- 
-//         // Set cookie with JWT token
-//         res.cookie('userSave', token, {
-//             expires: new Date(Date.now() + 86400 * 1000),
-//             httpOnly: true
-//         });
- 
-//         console.log("logged in");
-//         return res.status(200).redirect("/");
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(500).send("Internal Server Error");
-//     }
-// };
- 
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -81,14 +49,46 @@ exports.login = async (req, res) => {
             return res.status(400).send("Invalid email or password");
         }
  
-        // Send OTP verification email
-        await sendOtpVerificationEmail(user, res);
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.ENV_JWT_SECRET, {
+            expiresIn: process.env.ENV_JWT_EXPIRES_IN
+        });
  
+        console.log("the token is " + token);
+ 
+        // Set cookie with JWT token
+        res.cookie('userSave', token, {
+            expires: new Date(Date.now() + 86400 * 1000),
+            httpOnly: true
+        });
+ 
+        console.log("logged in");
+        return res.status(200).redirect("/");
     } catch (error) {
         console.log(error);
         return res.status(500).send("Internal Server Error");
     }
 };
+ 
+// exports.login = async (req, res) => {
+//     try {
+//         const { email, password } = req.body;
+ 
+//         // Find user by email
+//         const user = await User.findOne({ email });
+ 
+//         if (!user || !await bcrypt.compare(password, user.password)) {
+//             return res.status(400).send("Invalid email or password");
+//         }
+ 
+//         // Send OTP verification email
+//         await sendOtpVerificationEmail(user, res);
+ 
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).send("Internal Server Error");
+//     }
+// };
  
 exports.verify = async(req, res) => {
     try {
