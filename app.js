@@ -47,6 +47,7 @@ app.post('/reset-password',require('./routes/auth'));
 app.use('/venue-review', require('./routes/pages'));
 app.use('/venue-details', require('./routes/pages'));
 app.use('/resrvation-details', require('./routes/pages'));
+app.use('/user-reservation-details', require('./routes/pages'));
 
 
 app.listen(5000, ()=>{

@@ -388,5 +388,27 @@ router.get('/reservation-details', async (req, res) => {
     }
 });
 
+// reservations by user
+router.get('/user-reservation-details', async (req, res) => {
+    try {
+        const userId = req.body.userId;
+
+        // Find the user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Find all the reservations made by the user
+        const reservations = await Venue.find({ 'bookings.userId': userId })
+            .select('v_name address sport bookings');
+
+        // Return the reservations made by the user
+        res.status(200).json({ reservations });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
 module.exports = router;
 
