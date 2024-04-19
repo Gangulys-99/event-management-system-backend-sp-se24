@@ -354,9 +354,9 @@ router.post('/venue-review', authController.isLoggedIn, async (req, res) => {
 
 router.get('/venue-details', async (req, res) => {
     try {
-        const  venueId = req.body.venueId;
+        const venueId = req.body.venueId;
         console.log(venueId);
-        const venue = await Venue.findById(venueId); 
+        const venue = await Venue.findById(venueId);
         console.log(venue);
         res.status(200).json(venue);
     } catch (error) {
@@ -364,5 +364,29 @@ router.get('/venue-details', async (req, res) => {
         res.status(500).send("Internal Server Error");
     }
 });
+
+// get all reservations at a venue
+router.get('/reservation-details', async (req, res) => {
+    try {
+        const venueId = req.body.venueId;
+
+        // Find the venue by ID
+        const venue = await Venue.findById(venueId).populate({
+            path: 'bookings.userId',
+            select: 'username' // Select the username field to be populated
+        });
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        
+        // Return the bookings/reservations for the venue
+        res.status(200).json({ bookings: venue.bookings });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 module.exports = router;
 
