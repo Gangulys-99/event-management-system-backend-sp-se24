@@ -59,7 +59,11 @@ const venueSchema = new mongoose.Schema({
             ref: 'User',
             required: true
         }
-    }]
+    }],
+    bookmarked: {
+        type: Boolean,
+        default: false // Default value is false
+    }
 });
 
 module.exports = mongoose.model('Venue', venueSchema);

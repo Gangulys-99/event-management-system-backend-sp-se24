@@ -410,5 +410,38 @@ router.get('/user-reservation-details', async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 });
+
+// venue bookmark
+router.post('/bookmark-venue/', authController.isLoggedIn, async (req, res) => {
+    try {
+        const userId = req.body.userId;
+        const venueId = req.params.venueId;
+
+        // Check if the venue exists
+        const venue = await Venue.findById(venueId);
+        if (!venue) {
+            return res.status(404).json({ message: 'Venue not found' });
+        }
+
+        // Check if the venue is already bookmarked by the user
+        const isBookmarked = venue.bookmarks.some(bookmark => bookmark.userId.equals(userId));
+        if (isBookmarked) {
+            return res.status(400).json({ message: 'Venue already bookmarked' });
+        }
+
+        // Add the bookmark to the venue
+        venue.bookmarks.push({ userId });
+        venue.bookmarked = true;
+
+        // Save the updated venue
+        await venue.save();
+
+        res.status(200).json({ message: 'Venue bookmarked successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 module.exports = router;
 
