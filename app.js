@@ -46,14 +46,12 @@ app.post('/request-password-reset', require('./routes/auth'));
 app.post('/reset-password',require('./routes/auth'));
 app.use('/venue-review', require('./routes/pages'));
 app.use('/venue-details', require('./routes/pages'));
-app.use('/resrvation-details', require('./routes/pages'));
+app.use('/reservation-details', require('./routes/pages'));
 app.use('/user-reservation-details', require('./routes/pages'));
-app.use('/bookmark-venue', require('./routes/pages'));
 
 
-app.listen(5000, ()=>{
+app.listen(3001, ()=>{
     console.log("server started");
 });
-
 
 

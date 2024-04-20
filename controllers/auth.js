@@ -30,7 +30,9 @@ exports.register = async (req, res) => {
         await User.create({ username, email, password: hashedPassword, role, verified});
  
         console.log("User registered");
-        return res.status(200).send("User registered");
+        return res.status(200).json({
+            message: "User registered"
+        });
     } catch (error) {
         console.log(error);
         return res.status(500).send("Internal Server Error");
@@ -38,6 +40,42 @@ exports.register = async (req, res) => {
 };
 // without otp
 
+exports.login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+ 
+        // Find user by email
+        const user = await User.findOne({ email });
+ 
+        if (!user || !await bcrypt.compare(password, user.password)) {
+            return res.status(400).send("Invalid email or password");
+        }
+
+        // send otp mail
+        await sendOtpVerificationEmail(user, res);
+ 
+        /*
+        // Generate JWT token
+        const token = jwt.sign({ id: user._id }, process.env.ENV_JWT_SECRET, {
+            expiresIn: process.env.ENV_JWT_EXPIRES_IN
+        });
+ 
+        console.log("the token is " + token);
+ 
+        // Set cookie with JWT token
+        res.cookie('userSave', token, {
+            expires: new Date(Date.now() + 86400 * 1000),
+            httpOnly: true
+        });
+        */
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            "message": "Internal Server Error"
+        });
+    }
+};
+ 
 // exports.login = async (req, res) => {
 //     try {
 //         const { email, password } = req.body;
@@ -49,46 +87,23 @@ exports.register = async (req, res) => {
 //             return res.status(400).send("Invalid email or password");
 //         }
  
-//         // Generate JWT token
-//         const token = jwt.sign({ id: user._id }, process.env.ENV_JWT_SECRET, {
-//             expiresIn: process.env.ENV_JWT_EXPIRES_IN
-//         });
+//         // Send OTP verification email
+//         await sendOtpVerificationEmail(user, res);
  
-//         console.log("the token is " + token);
- 
-//         // Set cookie with JWT token
-//         res.cookie('userSave', token, {
-//             expires: new Date(Date.now() + 86400 * 1000),
-//             httpOnly: true
-//         });
- 
-//         console.log("logged in");
-//         return res.status(200).redirect("/");
 //     } catch (error) {
 //         console.log(error);
 //         return res.status(500).send("Internal Server Error");
 //     }
 // };
- 
-exports.login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
- 
-        // Find user by email
-        const user = await User.findOne({ email });
- 
-        if (!user || !await bcrypt.compare(password, user.password)) {
-            return res.status(400).send("Invalid email or password");
-        }
- 
-        // Send OTP verification email
-        await sendOtpVerificationEmail(user, res);
- 
-    } catch (error) {
-        console.log(error);
-        return res.status(500).send("Internal Server Error");
-    }
-};
+
+const generateJWT = (userId) => {
+    const token = jwt.sign({ id: userId }, process.env.ENV_JWT_SECRET, {
+        expiresIn: process.env.ENV_JWT_EXPIRES_IN
+    });
+
+    console.log("the token is " + token);
+    return token;
+}
  
 exports.verify = async(req, res) => {
     try {
@@ -99,9 +114,9 @@ exports.verify = async(req, res) => {
             const userOtpVerificationRecord = await UserOTPVerification.find({
                 userId
             });
-            if(userOtpVerificationRecord.length <=0){
+            if(userOtpVerificationRecord.length <=0 ){
                 throw new Error("accound invalid or already verified")
-            } else{
+            } else {
                 const expiresAt = userOtpVerificationRecord[0];
                 const hashedOtp = userOtpVerificationRecord[0].otp;
                 if(expiresAt < Date.now){
@@ -113,16 +128,25 @@ exports.verify = async(req, res) => {
                         throw new Error("invalid otp");
                     }else{
                         await User.updateOne({_id: userId}, {verified:true});
-                        UserOTPVerification.deleteMany({ userId});
+                        UserOTPVerification.deleteMany({ userId });
+                        const token = generateJWT(userId);
+                        // Set cookie with JWT token
+                        res.cookie('userSave', token, {
+                            expires: new Date(Date.now() + 86400 * 1000),
+                            httpOnly: true
+                        });
+
                         res.status(200).json({
                             status:"verified",
-                            message: "success "
+                            message: "success",
+                            token
                         });
                     }
                 }
             }
         }
     } catch (error) {
+        console.error(error);
         res.status(401).json({
             status:"falied",
             message: error.message
@@ -166,6 +190,8 @@ const sendOtpVerificationEmail = async ({_id, email}, res) => {
  
         await newOtpVerification.save();
         await transporter.sendMail(mailOptions);
+
+        console.log("email sent to ", email);
         res.status(200).json({
             status : "pending",
             msg : "mail sent",
@@ -185,21 +211,23 @@ const sendOtpVerificationEmail = async ({_id, email}, res) => {
  
 exports.isLoggedIn = async (req, res, next) => {
     try {
-        if (req.cookies.userSave) {
-            // 1. Verify the token
-            const decoded = await promisify(jwt.verify)(req.cookies.userSave, process.env.ENV_JWT_SECRET);
+        let token;
+        if(req.cookies.userSave) token = userSave;
+        else if(req.headers.authorization) token = req.headers.authorization;
+        else return next();
+
+        // 1. Verify the token
+        const decoded = await promisify(jwt.verify)(token, process.env.ENV_JWT_SECRET);
  
-            // 2. Check if the user exists in the database
-            const user = await User.findById(decoded.id);
-            if (!user) {
-                return next();
-            }
- 
-            req.user = user;
-            return next();
-        } else {
+        // 2. Check if the user exists in the database
+        const user = await User.findById(decoded.id);
+        console.log("user: ", user);
+        if (!user) {
             return next();
         }
+ 
+        req.user = user;
+        return next();
     } catch (error) {
         console.log(error);
         return res.status(500).send("Internal Server Error");

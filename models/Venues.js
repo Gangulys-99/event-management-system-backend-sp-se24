@@ -53,13 +53,15 @@ const venueSchema = new mongoose.Schema({
         },
         review: String
     }],
-    bookmarks: [{
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true
-        }
-    }],
+    // bookmarks: [{
+    //     userId: {
+    //         type: mongoose.Schema.Types.ObjectId,
+    //         ref: 'User'
+    //     },
+    //     date: Date,
+    //     startTime: String,
+    //     endTime: String
+    // }],
     bookmarked: {
         type: Boolean,
         default: false // Default value is false
