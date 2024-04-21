@@ -108,13 +108,14 @@ async function findUserByEmail(email) {
 // with dates.user_id, reservation_type, vname, address, sport, total_capacity, total_cost, closed
 
 const createVenue = require('../functions/createVenue.js');
-router.post('/venue', authController.isLoggedIn, async (req, res) => {
+router.post('/venue', async (req, res) => {
     try {
         const { userId, v_name, address, sport, total_capacity, total_cost, closed } = req.body;
-        console.log(req.user);
-        console.log(req.user.role)
+        // console.log(req.user);
+        // console.log(req.user.role)
+        const user = await User.findById(userId);
         // Check if the user is authenticated
-        if (!req.user || req.user.role !== 'owner') {
+        if (user.role !== 'owner') {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
