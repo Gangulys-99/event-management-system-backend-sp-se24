@@ -18,12 +18,12 @@ EXPOSE 5001
 
 # Define environment variable
 ENV MONGO_URI mongodb+srv://ishaghaisas:C2ZQTuW1Z1fA4imj@eventmate.kmhysst.mongodb.net/
-ENV ENV_JWT_EXPIRES_IN: 86400
-ENV ENV_JWT_COOKIE_EXPIRES: 86400 
-ENV ENV_MAIL_USER: adithyacherukuri@gmail.com
-ENV ENV_MAIL_PASS: "oeif fjad pzgj vjmf"
-ENV ENV_SECRET_KEY: eventmate
-ENV ENV_SESSION_KEY: eventmate
+ENV ENV_JWT_EXPIRES_IN 86400
+ENV ENV_JWT_COOKIE_EXPIRES 86400 
+ENV ENV_MAIL_USER adithyacherukuri@gmail.com
+ENV ENV_MAIL_PASS "oeif fjad pzgj vjmf"
+ENV ENV_SECRET_KEY eventmate
+ENV ENV_SESSION_KEY eventmate
 
 
 # Command to run your application
