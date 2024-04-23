@@ -148,7 +148,7 @@ exports.verify = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(401).json({
-            status: "falied",
+            status: "failed",
             message: error.message
         });
     }
