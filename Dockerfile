@@ -18,6 +18,11 @@ EXPOSE 5001
 
 # Define environment variable
 ENV MONGO_URI mongodb+srv://ishaghaisas:C2ZQTuW1Z1fA4imj@eventmate.kmhysst.mongodb.net/
+ENV ENV_JWT_EXPIRES_IN = 86400
+ENV ENV_JWT_COOKIE_EXPIRES = 86400 
+ENV ENV_MAIL_USER = gangulyanurag99@gmail.com
+ENV ENV_MAIL_PASS = oacp ecth wrlf jbro
+
 
 # Command to run your application
 CMD ["node", "app.js"]
