@@ -24,7 +24,7 @@ ENV ENV_MAIL_USER adithyacherukuri@gmail.com
 ENV ENV_MAIL_PASS "oeif fjad pzgj vjmf"
 ENV ENV_SECRET_KEY eventmate
 ENV ENV_SESSION_KEY eventmate
-
+ENV ENV_JWT_SECRET secret 
 
 # Command to run your application
 CMD ["node", "app.js"]
