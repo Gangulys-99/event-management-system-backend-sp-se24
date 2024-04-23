@@ -115,9 +115,9 @@ router.post('/venue', async (req, res) => {
         // console.log(req.user.role)
         const user = await User.findById(userId);
         // Check if the user is authenticated
-        if (user.role !== 'owner') {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
+        // if (user.role !== 'owner' || user.role !== 'Admin') {
+        //     return res.status(401).json({ message: 'Unauthorized' });
+        // }
 
         await createVenue(userId, v_name, address, sport, total_capacity, total_cost, closed);
         res.status(200).json({ message: 'Successfully added venue' });
@@ -129,7 +129,7 @@ router.post('/venue', async (req, res) => {
 });
 
 // open or close
-
+// TODO - change user id
 router.put('/venue/:id', authController.isLoggedIn, async (req, res) => {
     try {
         const venueId = req.params.id;
@@ -165,10 +165,10 @@ router.put('/venue/:id', authController.isLoggedIn, async (req, res) => {
 // Add activity
 const createActivity = require('../functions/createActivity.js');
 
-router.post('/add-activity', authController.isLoggedIn, async (req, res) => {
+router.post('/add-activity', async (req, res) => {
     try {
         const { userId, activity_name, venue_id, total_capacity, address, date, start_time, end_time } = req.body;
-        console.log(req.user);
+        // console.log(req.user);
         // console.log(req.user.role)
 
 
@@ -182,10 +182,13 @@ router.post('/add-activity', authController.isLoggedIn, async (req, res) => {
 });
 
 // Register for activity 
-router.post('/register-for-activity/:activityId', authController.isLoggedIn, async (req, res) => {
+// todo
+router.post('/register-for-activity/:activityId', async (req, res) => {
     try {
         const { activityId } = req.params;
-        const userId = req.user._id;
+        const {userId} = req.body;
+        // const user = await User.findById(userId);
+        // const userId = req.user._id;
         await registerForActivity(activityId, userId);
         res.status(200).json({ message: 'Successfully registered for activity' });
     } catch (error) {
@@ -212,7 +215,7 @@ router.get('/player-list', async (req, res) => {
 });
 
 // Book Venue
-router.post('/book-venue', authController.isLoggedIn, async (req, res) => {
+router.post('/book-venue', async (req, res) => {
     try {
         const { venueId, bookDate, startTime, endTime } = req.body;
         const userId = req.user._id;
